@@ -19,23 +19,29 @@ Este laboratorio te guiará a través de la configuración de un pipeline CI/CD 
 
 ## Descripción del Flujo CI/CD
 
+![CI/CD Flow](assets/cd-flow.png)
+
 ### 1. **Gestión de Código en GitHub**
-   - Los desarrolladores realizan cambios en el repositorio de código fuente de la **aplicación Node.js**.
-   - Jenkins es notificado (webhook o polling) cuando se detectan cambios.
+
+- Los desarrolladores realizan cambios en el repositorio de código fuente de la **aplicación Node.js**.
+- Jenkins es notificado (webhook o polling) cuando se detectan cambios.
 
 ### 2. **Pipeline CI en Jenkins**
-   - Jenkins construye la aplicación y crea una imagen Docker.
-   - La imagen Docker es subida a un registro de contenedores (Docker Hub, ECR, etc.).
-   - Jenkins actualiza el repositorio **GitOps** (Helm chart) con la nueva etiqueta de la imagen Docker.
-   - Jenkins hace commit de estos cambios en el repositorio GitOps.
+
+- Jenkins hace build de la aplicación y crea una imagen Docker.
+- La imagen Docker es subida a un registro de contenedores (Docker Hub, ECR, etc.).
+- Jenkins actualiza el repositorio **GitOps** (Helm chart) con la nueva etiqueta de la imagen Docker.
+- Jenkins hace commit de estos cambios en el repositorio GitOps.
 
 ### 3. **Monitoreo y Sincronización con ArgoCD**
-   - **ArgoCD** monitorea el repositorio GitOps y detecta cuando se realizan cambios.
-   - ArgoCD sincroniza los cambios con el clúster de Kubernetes, desplegando la nueva versión de la aplicación.
+
+- **ArgoCD** monitorea el repositorio GitOps y detecta cuando se realizan cambios.
+- ArgoCD sincroniza los cambios con el clúster de Kubernetes, desplegando la nueva versión de la aplicación.
 
 ### 4. **Despliegue en Kubernetes**
-   - Kubernetes aplica los cambios y realiza un **rolling update**, reemplazando gradualmente los pods antiguos con los nuevos.
-   - Si hay algún problema, ArgoCD o el administrador pueden hacer un rollback a una versión anterior usando GitOps.
+
+- Kubernetes aplica los cambios y realiza un **rolling update**, reemplazando gradualmente los pods antiguos con los nuevos.
+- Si hay algún problema, ArgoCD o el administrador pueden hacer un rollback a una versión anterior usando GitOps.
 
 ---
 
@@ -53,6 +59,7 @@ Forkea ambos repositorios a tu cuenta de GitHub antes de empezar el laboratorio.
 ### 1. Forkea Ambos Repositorios
 
 1. Ve a GitHub y haz un fork de estos repositorios:
+
    - Node.js Application (Este mismo repo): https://github.com/arol-dev/nodejs-app-aroldev
    - Helm Chart (Infrastructure): https://github.com/arol-dev/nodejs-app-aroldev-infra
 
@@ -68,9 +75,9 @@ Forkea ambos repositorios a tu cuenta de GitHub antes de empezar el laboratorio.
 
 ### 3. Crear el Pipeline en Jenkins
 
-1. Accede a Jenkins: https://jenkins.aroldev.com/. Credentiales: Username: admin , Password: L49fXLvAGcQn7zxY
+1. Accede a Jenkins: https://jenkins.aroldev.com/. Con el usuario `admin` y el password que compartiremos en discord.
 
-2. Crea un nuevo pipeline en Jenkins llamado `<nombre.apellido>-ci` para tu fork del repositorio de la aplicación. 
+2. Crea un nuevo pipeline en Jenkins llamado `<numero-sala>-ci` para tu fork del repositorio de la aplicación.
 
 3. Habilita un sondeo de dos minutos: `H/2 * * * *`
 
@@ -78,19 +85,19 @@ Forkea ambos repositorios a tu cuenta de GitHub antes de empezar el laboratorio.
 
    - Git clone del Node.js Application: https://github.com/arol-dev/nodejs-app-aroldev
    - Jenkins construye la aplicación y crea una imagen Docker.
-   - La imagen Docker es subida a un registro de contenedores Docker Hub. Utiliza las credentailes con id `dockerhub` 
-   - Jenkins actualiza el repositorio **GitOps** (Helm chart) con la nueva etiqueta de la imagen Docker. Actualiza el campo `deployemnt.image.tag` nel archivo values. yaml. 
-        - Helm Chart (Infrastructure): https://github.com/arol-dev/nodejs-app-aroldev-infra
-   - Jenkins hace commit de estos cambios y un push en el repositorio GitOps. 
+   - La imagen Docker es subida a un registro de contenedores Docker Hub. Utiliza las credentailes con id `dockerhub`
+   - Jenkins actualiza el repositorio **GitOps** (Helm chart) con la nueva etiqueta de la imagen Docker. Actualiza el campo `deployemnt.image.tag` nel archivo values. yaml.
+     - Helm Chart (Infrastructure): https://github.com/arol-dev/nodejs-app-aroldev-infra
+   - Jenkins hace commit de estos cambios y un push en el repositorio GitOps.
 
 Template Jenkinsfile para crear los varios pasos:
 
-```grrovy
+```groovy
    pipeline {
     agent { label 'docker-agent'}
     stages {
         stage('Git Clone') {
-            steps { 
+            steps {
                 script {
                     sh "echo \"The Build Number is ${env.BUILD_NUMBER}\""
                 }
@@ -98,7 +105,7 @@ Template Jenkinsfile para crear los varios pasos:
         }
 
         stage('Check Docker socket') {
-            steps { 
+            steps {
                 container('docker') {
                     sh """
                     sleep 3
@@ -109,17 +116,17 @@ Template Jenkinsfile para crear los varios pasos:
         }
 
         stage('Build Docker image') {
-            steps { 
+            steps {
                 container('docker') {
                     sh """
-                    
+
                     """
                 }
             }
         }
 
         stage('Login to DockerHub') {
-            steps { 
+            steps {
                 container('docker') {
 
                 }
@@ -127,7 +134,7 @@ Template Jenkinsfile para crear los varios pasos:
         }
 
         stage('Push Docker Image') {
-            steps { 
+            steps {
                 container('docker') {
                     sh """
 
@@ -135,37 +142,37 @@ Template Jenkinsfile para crear los varios pasos:
                 }
             }
         }
-        
+
         stage('Clean Workspace') {
-            steps { 
+            steps {
                 cleanWs()
             }
         }
-        
+
         stage('Update values.yaml Chart') {
             steps {
                 script {
                     // Update the image tag in values.yaml (assumes image: <tag> format)
                     sh """
-                    
+
                     """
                 }
             }
         }
-        
+
         stage('Git Push Infra') {
-            steps { 
+            steps {
                 withCredentials([
                     gitUsernamePassword(credentialsId: 'github', gitToolName: 'Default')
                 ]) {
                     sh """
-                    
+
                     """
                 }
             }
-        }      
+        }
     }
-    
+
     post {
         always {
             echo 'Cleaning workspace...'
@@ -173,11 +180,11 @@ Template Jenkinsfile para crear los varios pasos:
         }
     }
 }
-   ```
+```
 
 ### 4. Configurar ArgoCD
 
-1. Accede a **ArgoCD**: [ArgoCD Dashboard](https://argo.aroldev.com/). Credentiales: Username: admin , Password: L49fXLvAGcQn7zxY
+1. Accede a **ArgoCD**: [ArgoCD Dashboard](https://argo.aroldev.com/). Credentiales: Username: admin, password que compartiremos en discord.
 2. Crea una nueva aplicación en **ArgoCD** apuntando a tu fork del repositorio Helm Chart:
 
    - **Destino del Repositorio**: URL de tu fork del repositorio `nodejs-app-aroldev-infra`.
@@ -185,7 +192,6 @@ Template Jenkinsfile para crear los varios pasos:
    - **Sync Policy**: Automática o manual según prefieras.
 
 3. Verifica que ArgoCD pueda sincronizar correctamente los cambios con tu clúster de Kubernetes.
-
 
 ### 5. Actualizar la Aplicación para Desplegar
 
@@ -202,9 +208,10 @@ Template Jenkinsfile para crear los varios pasos:
 
 Al finalizar el laboratorio, habrás creado un pipeline CI/CD completo donde:
 
-1. Los cambios en el código fuente de la aplicación activan automáticamente Jenkins.
-2. Jenkins construye una nueva imagen Docker, la sube al registro de contenedores y actualiza el manifiesto en el repositorio GitOps.
+1. Los cambios en el código fuente de la aplicación activan automáticamente Jenkins. Por ejemplo, haz un cambio en el html que sea visible en la aplicación. Haz commit y push.
+2. Observa como Jenkins construye una nueva imagen Docker, la sube al registro de contenedores y actualiza el manifiesto en el repositorio GitOps.
 3. ArgoCD sincroniza los cambios con Kubernetes y despliega la nueva versión de la aplicación en el clúster.
+4. Accede a la aplicación en tu navegador con la IP del cluster (preguntad por discord) y el puerto asignado al NodePort de vuestra aplicación (consultad en argo, por el nodeport creado).
 
 ---
 
@@ -217,12 +224,4 @@ Al finalizar el laboratorio, habrás creado un pipeline CI/CD completo donde:
 
 ---
 
-¡Buena suerte en tu laboratorio de CI/CD!
-```
-
-Este archivo `README.md` contiene todas las instrucciones necesarias para realizar el laboratorio CI/CD con Jenkins y ArgoCD en un único fichero, proporcionando un flujo claro y estructurado.
-
-
-
-
-
+¡Buena suerte en tu laboratorio de CI/CD! 🐙
