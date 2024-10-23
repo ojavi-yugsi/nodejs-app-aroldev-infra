@@ -6,7 +6,7 @@ deployment:
   replicaCount: 1
   name: nodejs
   image:
-    repository: aroldev/nodejs-app-aroldev
+    repository: aroldev/sala1-ci
     tag: 15
     imagePullPolicy: IfNotPresent
 
