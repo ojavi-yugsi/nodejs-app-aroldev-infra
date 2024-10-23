@@ -7,7 +7,7 @@ deployment:
   name: nodejs
   image:
     repository: aroldev/nodejs-app-aroldev
-    tag: \"15\"
+    tag: 15
     imagePullPolicy: IfNotPresent
 
 # This is for the secretes for pulling an image from a private repository more information can be found here: https://kubernetes.io/docs/tasks/configure-pod-container/pull-image-private-registry/
