@@ -50,7 +50,7 @@ securityContext: {}
 service:
   enabled: true
   name: nodejs-svc
-  type: ClusterIP
+  type: NodePort
   port: 9080
   targetPort: 5000
 
