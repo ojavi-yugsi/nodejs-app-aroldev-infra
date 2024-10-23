@@ -3,7 +3,7 @@ kind: Service
 metadata:
   name: {{ .Values.service.name }}
   labels:
-    {{- include "lab.labels" . | nindent 4 }}
+    {{- include "my-chart.labels" . | nindent 4 }}
 spec:
   type: {{ .Values.service.type }}
   ports:
